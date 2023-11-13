@@ -1,37 +1,33 @@
 require("plenary.reload").reload_module("gruvbox", true)
 local gruvbox = require("gruvbox")
+local default = gruvbox.config
 
-describe("setup", function()
+local function clear_term_colors()
+  for item = 0, 15 do
+    vim.g["terminal_color_" .. item] = nil
+  end
+end
+
+describe("tests", function()
   it("works with default values", function()
-    local expected = {
-      undercurl = true,
-      underline = true,
-      bold = true,
-      strikethrough = true,
-      italic = true,
-      inverse = true,
-      invert_selection = false,
-      invert_signs = false,
-      invert_tabline = false,
-      invert_intend_guides = false,
-      contrast = "",
-      palette_overrides = {},
-      overrides = {},
-      dim_inactive = false,
-      transparent_mode = false,
-    }
-
     gruvbox.setup()
-    assert.are.same(gruvbox.config, expected)
+    assert.are.same(gruvbox.config, default)
   end)
 
   it("works with config overrides", function()
     local expected = {
+      terminal_colors = true,
       undercurl = false,
       underline = false,
       bold = true,
+      italic = {
+        strings = true,
+        emphasis = true,
+        comments = true,
+        operators = false,
+        folds = true,
+      },
       strikethrough = true,
-      italic = true,
       inverse = true,
       invert_selection = false,
       invert_signs = false,
@@ -47,9 +43,7 @@ describe("setup", function()
     gruvbox.setup({ undercurl = false, underline = false })
     assert.are.same(gruvbox.config, expected)
   end)
-end)
 
-describe("highlight overrides", function()
   it("should override a hightlight color", function()
     local config = {
       overrides = {
@@ -107,34 +101,61 @@ describe("highlight overrides", function()
   it("should override links", function()
     local config = {
       overrides = {
-        Function = { bg = "#990000" },
+        TelescopePreviewBorder = { fg = "#990000", bg = nil },
       },
     }
-
     gruvbox.setup(config)
     gruvbox.load()
 
-    local group_id = vim.api.nvim_get_hl_id_by_name("Function")
+    local group_id = vim.api.nvim_get_hl_id_by_name("TelescopePreviewBorder")
     local values = {
-      background = vim.fn.synIDattr(group_id, "bg", "gui"),
+      fg = vim.fn.synIDattr(group_id, "fg", "gui"),
     }
-    assert.are.same(values, { background = "#990000" })
+
+    local expected = {
+      fg = "#990000",
+    }
+    assert.are.same(expected, values)
   end)
 
   it("should override palette", function()
     local config = {
       palette_overrides = {
-        bright_green = "#990000",
+        gray = "#ff9900",
       },
     }
 
     gruvbox.setup(config)
     gruvbox.load()
 
-    local group_id = vim.api.nvim_get_hl_id_by_name("Function")
+    local group_id = vim.api.nvim_get_hl_id_by_name("Comment")
     local values = {
-      background = vim.fn.synIDattr(group_id, "bg", "gui"),
+      fg = vim.fn.synIDattr(group_id, "fg", "gui"),
     }
-    assert.are.same(values, { background = "#990000" })
+    assert.are.same(values, { fg = "#ff9900" })
+  end)
+
+  it("does not set terminal colors when terminal_colors is false", function()
+    clear_term_colors()
+    gruvbox.setup({ terminal_colors = false })
+    gruvbox.load()
+    assert.is_nil(vim.g.terminal_color_0)
+  end)
+
+  it("sets terminal colors when terminal_colors is true", function()
+    clear_term_colors()
+    gruvbox.setup({ terminal_colors = true })
+    gruvbox.load()
+
+    -- dark bg
+    local colors = require("gruvbox").palette
+    vim.opt.background = "dark"
+    assert.are.same(vim.g.terminal_color_0, colors.dark0)
+
+    -- light bg
+    clear_term_colors()
+    gruvbox.load()
+    vim.opt.background = "light"
+    assert.are.same(vim.g.terminal_color_0, colors.light0)
   end)
 end)

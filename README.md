@@ -6,7 +6,7 @@
       <a href="#"><img alt="Made with Lua" src="https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua" style="vertical-align:center" /></a>
 </p>
 
-A port of [gruvbox community](https://github.com/gruvbox-community/gruvbox) theme to lua with [treesitter](https://github.com/nvim-treesitter/nvim-treesitter) support!
+A port of [gruvbox community](https://github.com/gruvbox-community/gruvbox) theme to lua with [treesitter](https://github.com/nvim-treesitter/nvim-treesitter) and [semantic highlights](https://neovim.io/doc/user/lsp.html#lsp-semantic-highlight) support!
 
 <p align="center">
     <img src="https://i.postimg.cc/fy3tnGFt/gruvbox-themes.png" />
@@ -18,10 +18,22 @@ Neovim 0.8.0+
 
 # Installing
 
-Using `packer`
+## Using `packer`
 
 ```lua
 use { "ellisonleao/gruvbox.nvim" }
+```
+
+## Using `lazy.nvim`
+
+```lua
+{ "ellisonleao/gruvbox.nvim", priority = 1000 , config = true, opts = ...}
+```
+
+## Using `vim-plug`
+
+```vim
+Plug 'ellisonleao/gruvbox.nvim'
 ```
 
 # Basic Usage
@@ -45,13 +57,19 @@ vim.cmd([[colorscheme gruvbox]])
 Additional settings for gruvbox are:
 
 ```lua
--- setup must be called before loading the colorscheme
 -- Default options:
 require("gruvbox").setup({
+  terminal_colors = true, -- add neovim terminal colors
   undercurl = true,
   underline = true,
   bold = true,
-  italic = true,
+  italic = {
+    strings = true,
+    emphasis = true,
+    comments = true,
+    operators = false,
+    folds = true,
+  },
   strikethrough = true,
   invert_selection = false,
   invert_signs = false,
@@ -67,9 +85,11 @@ require("gruvbox").setup({
 vim.cmd("colorscheme gruvbox")
 ```
 
+**VERY IMPORTANT**: Make sure to call setup() **BEFORE** calling the colorscheme command, to use your custom configs
+
 ## Overriding
 
-### Pallette
+### Palette
 
 You can specify your own palette colors. For example:
 
@@ -81,8 +101,6 @@ require("gruvbox").setup({
 })
 vim.cmd("colorscheme gruvbox")
 ```
-
-More colors in the [palette.lua](lua/gruvbox/palette.lua) file
 
 ### Highlight groups
 
@@ -98,6 +116,18 @@ require("gruvbox").setup({
 vim.cmd("colorscheme gruvbox")
 ```
 
+It also works with treesitter groups and lsp semantic highlight tokens
+
+```lua
+require("gruvbox").setup({
+    overrides = {
+        ["@lsp.type.method"] = { bg = "#ff9900" },
+        ["@comment.lua"] = { bg = "#000000" },
+    }
+})
+vim.cmd("colorscheme gruvbox")
+```
+
 Please note that the override values must follow the attributes from the highlight group map, such as:
 
 - **fg** - foreground color
@@ -105,4 +135,4 @@ Please note that the override values must follow the attributes from the highlig
 - **bold** - true or false for bold font
 - **italic** - true or false for italic font
 
-Other values can be seen in `:h synIDattr`
+Other values can be seen in [`synIDattr`](<https://neovim.io/doc/user/builtin.html#synIDattr()>)
